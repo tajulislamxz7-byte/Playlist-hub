@@ -66,10 +66,23 @@ export default async (req) => {
       await store.setJSON("data", d);
       return json({ ok: true });
     }
+    if (path === "/api/meta" && req.method === "GET") {
+      if (!check((req.headers.get("authorization") || "").replace(/^Bearer /, ""))) return json({ error: "Unauthorized" }, 401);
+      const q = new URL(req.url).searchParams, type = q.get("type"), id = q.get("id") || "";
+      if (!/^[\w-]{10,}$/.test(id) || (type !== "video" && type !== "playlist")) return json({ error: "Bad request" }, 400);
+      const target = type === "video" ? "https://www.youtube.com/watch?v=" + id : "https://www.youtube.com/playlist?list=" + id;
+      const ac = new AbortController(), tm = setTimeout(() => ac.abort(), 6000);
+      try {
+        const r = await fetch("https://www.youtube.com/oembed?format=json&url=" + encodeURIComponent(target), { signal: ac.signal });
+        if (!r.ok) return json({ error: "Not found" }, 404);
+        const j = await r.json();
+        return json({ title: str(j.title, 120), author: str(j.author_name, 80), thumbnail: /^https:\/\//.test(j.thumbnail_url || "") ? j.thumbnail_url : "" });
+      } finally { clearTimeout(tm); }
+    }
     return json({ error: "Not found" }, 404);
   } catch (e) {
     return json({ error: "Server error" }, 500);
   }
 };
 
-export const config = { path: ["/api/data", "/api/login", "/api/backups", "/api/restore"] };
+export const config = { path: ["/api/data", "/api/login", "/api/backups", "/api/restore", "/api/meta"] };

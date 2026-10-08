@@ -21,11 +21,11 @@ const DEFAULT = {
 
 function clean(d) {
   if (!d || !Array.isArray(d.pl) || !Array.isArray(d.cats) || d.pl.length > 2000 || d.cats.length > 200) return null;
-  const cats = d.cats.map((c, i) => ({ id: str(c && c.id, 40) || "c" + i, name: str(c && c.name, 60).trim(), icon: str(c && c.icon, 8), color: c && /^#[0-9a-f]{6}$/i.test(c.color) ? c.color : "" })).filter((c) => c.name);
+  const cats = d.cats.map((c, i) => ({ id: str(c && c.id, 40) || "c" + i, name: str(c && c.name, 60).trim(), icon: str(c && c.icon, 8), color: c && /^#[0-9a-f]{6}$/i.test(c.color) ? c.color : "", pinned: !!c && c.pinned === true })).filter((c) => c.name);
   const pl = d.pl.map((p, i) => ({
     id: str(p && p.id, 40), type: p && p.type === "video" ? "video" : "playlist", tags: Array.isArray(p && p.tags) ? p.tags.slice(0, 8).map((x) => str(x, 30).trim()).filter(Boolean) : [], title: str(p && p.title, 120), url: str(p && p.url, 300), playlistId: str(p && p.playlistId, 80),
     thumbnail: p && typeof p.thumbnail === "string" && /^https:\/\//.test(p.thumbnail) ? p.thumbnail.slice(0, 500) : "",
-    category: str(p && p.category, 60), description: str(p && p.description, 400), published: !p || p.published !== false,
+    category: str(p && p.category, 60), description: str(p && p.description, 400), published: !p || p.published !== false, pinned: !!p && p.pinned === true,
     order: p && Number.isFinite(p.order) ? p.order : i, createdAt: str(p && p.createdAt, 40), updatedAt: str(p && p.updatedAt, 40),
   }));
   if (pl.some((p) => !p.id || !p.title || !/^[\w-]{10,}$/.test(p.playlistId))) return null;

@@ -37,8 +37,8 @@ function clean(d) {
 export default async (req) => {
   const path = new URL(req.url).pathname.replace(/\/$/, "");
   try {
-    const store = getStore("hub");
-    if (path === "/api/data" && req.method === "GET") return json((await store.get("data", { type: "json" })) || DEFAULT);
+    const store = getStore({ name: "hub", consistency: "strong" });
+    if (path === "/api/data" && req.method === "GET") return json({ ...((await store.get("data", { type: "json" })) || DEFAULT), _v: 2 });
     if (path === "/api/login" && req.method === "POST") {
       const b = await req.json().catch(() => ({}));
       if (eq(String(b.email || "").trim(), EMAIL()) && eq(b.password || "", PASS())) return json({ token: mint(), email: EMAIL() });
